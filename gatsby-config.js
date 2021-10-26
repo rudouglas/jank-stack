@@ -36,10 +36,6 @@ module.exports = {
         NR_LICENSE_KEY: process.env.NEW_RELIC_LICENSE_KEY || '',
         NR_ACCOUNT_ID: process.env.NEW_RELIC_ACCOUNT_ID,
         SITE_NAME: 'jankstack',
-        customTags: {
-          gatsbySite: 'jankstack',
-          newFeature: 'remove-jank',
-        }
       }
     },
     {
@@ -56,6 +52,14 @@ module.exports = {
          */
         isUsingColorMode: true,
       },
-    }
+    },
+    {
+      resolve: `gatsby-source-contentful`,
+      options: {
+        spaceId: `lyo8oxh9wfuy`,
+        // Learn about environment variables: https://gatsby.dev/env-vars
+        accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+      },
+    },
   ],
 }

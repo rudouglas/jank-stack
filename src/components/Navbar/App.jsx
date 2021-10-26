@@ -41,6 +41,8 @@ export const Navbar = (props) => {
               >
                 {/* <NavLink.Desktop href="/" active>Home</NavLink.Desktop> */}
                 <NavLink.Desktop href="/about" {...props.active}>About</NavLink.Desktop>
+                <NavLink.Desktop href="/products" {...props.active}>Products</NavLink.Desktop>
+
                 <NavLink.Desktop href="https://github.com/newrelic-experimental/gatsby-plugin-newrelic" {...props.active} target="_blank">Plugin</NavLink.Desktop>
               </HStack>
             </HStack>

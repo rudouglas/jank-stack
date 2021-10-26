@@ -1,9 +1,8 @@
 const path = require(`path`)
-const JANKY_SOURCE_NODES = process.env.JANKY_SOURCE_NODES
-const JANKY_CREATE_PAGE = process.env.JANKY_CREATE_PAGE
-const JANKY_ERRORS = process.env.JANKY_ERRORS
+
+const JANKY_SITE = process.env.JANKY_SITE
 const SCALE_CHARACTERS = parseInt(process.env.SCALE_CHARACTERS)
-const limit = JANKY_SOURCE_NODES ? 10000 : 40
+const limit = JANKY_SITE ? 10000 : 40
 
 const axios = require("axios")
 
@@ -19,30 +18,55 @@ exports.sourceNodes = async ({ actions, createContentDigest }) => {
   )}`
 
   const rickMorty = await axios.get(rickMortyURL)
-  console.log(`rickMorty ${rickMorty.data.length}`)
-  const data = Array.from({ length: SCALE_CHARACTERS }, () => rickMorty.data).flat();
+  const data = Array.from(
+    { length: SCALE_CHARACTERS },
+    () => rickMorty.data
+  ).flat()
 
-  console.log(`scaled ${data.length}`)
-  data.forEach((character, index) => {
-    const nodeContent = JSON.stringify(character)
-    const nodeMeta = {
-      id: JSON.stringify(index),
-      parent: null,
-      children: [],
-      internal: {
-        type: `Characters`,
-        content: nodeContent,
-        contentDigest: createContentDigest(character),
-      },
-    }
-    const node = Object.assign({}, character, nodeMeta)
-    createNode(node)
-  })
+  
+  if (JANKY_SITE === 'true') {
+    console.log(`scaled ${data.length}`)
+    await Promise.all(
+      data.map(async (character, index) => {
+        const nodeContent = JSON.stringify(character)
+        const nodeMeta = {
+          id: JSON.stringify(index),
+          parent: null,
+          children: [],
+          internal: {
+            type: `Characters`,
+            content: nodeContent,
+            contentDigest: createContentDigest(character),
+          },
+        }
+        const node = Object.assign({}, character, nodeMeta)
+        createNode(node)
+      })
+    )
+  } else {
+    data.forEach((character, index) => {
+      const nodeContent = JSON.stringify(character)
+      const nodeMeta = {
+        id: JSON.stringify(index),
+        parent: null,
+        children: [],
+        internal: {
+          type: `Characters`,
+          content: nodeContent,
+          contentDigest: createContentDigest(character),
+        },
+      }
+      const node = Object.assign({}, character, nodeMeta)
+      createNode(node)
+    })
+  }
+  
 }
 
 exports.createPages = async ({ graphql, actions }) => {
   const { createPage } = actions
   const CharactersSingle = path.resolve("src/templates/CharactersSingle.js")
+  const ProductSingle = path.resolve("src/templates/ProductSingle.js")
 
   const result = await graphql(`
     query {
@@ -56,6 +80,18 @@ exports.createPages = async ({ graphql, actions }) => {
           image
         }
       }
+      allContentfulProduct {
+        nodes {
+          id
+          janky_company
+          janky_job
+          janky_wallet
+          over_priced
+          currency
+          material
+          product
+        }
+      }
     }
   `)
   if (result.errors) {
@@ -64,27 +100,22 @@ exports.createPages = async ({ graphql, actions }) => {
 
   // const posts = result.data.allMarkdownRemark.nodes
   const characters = result.data.allCharacters.nodes
+  const products = result.data.allContentfulProduct.nodes
 
-  if (JANKY_CREATE_PAGE === 'true') {
-    // posts.forEach(({ id, frontmatter: { slug } }, index) => {
-    //   const previous = index === posts.length - 1 ? null : posts[index + 1]
-    //   const next = index === 0 ? null : posts[index - 1]
+  
+  if (JANKY_SITE === "true") {
+    console.log(JSON.stringify(products))
 
-    //   createPage({
-    //     path: slug,
-    //     component: blogPost,
-    //     context: {
-    //       id,
-    //       slug,
-    //       previous,
-    //       next,
-    //     },
-    //   })
-    // })
-    characters.forEach(node => {
-			if (node.name.length >= 10) {
-				JANKY_ERRORS === 'true' && console.error(`Error: this page is not as janky as it could be, please unfix`)
-			}
+    for (let i = 0; i < characters.length; i++) {
+      const node = characters[i];
+      if (node.name.length >= 10) {
+        JANKY_SITE === "true" &&
+          console.error(
+            `Error: this page is not as janky as it could be, please unfix`
+          )
+      }
+
+	
 
       createPage({
         path: `characters/${node.id}`,
@@ -96,29 +127,34 @@ exports.createPages = async ({ graphql, actions }) => {
           species: node.species,
           gender: node.gender,
           status: node.status,
-					limit,
+          limit,
         }, // This is to pass data as props to the component.
       })
+    }
+    const firstId = products[0].id
+    for (let i = 0; i < products.length; i++) {
+      const nextId = products[i + 1] ? products[i + 1].id : firstId;
+      const node = products[i];
+      createPage({
+        path: `products/${node.id}`,
+        component: ProductSingle,
+        context: {
+          id: node.id,
+          nextId,
+          jankyCompany: node.janky_company,
+          jankyJob: node.janky_job,
+          jankyWallet: node.janky_wallet,
+          overPriced: node.over_priced,
+          currency: node.currency,
+          material: node.material,
+          product: node.product,
+        }, // This is to pass data as props to the component.
+      })
+    }
+    products.forEach((node, index) => {
+      
     })
   } else {
-    // await Promise.all(
-    //   posts.map(async ({ id, frontmatter: { slug } }, index) => {
-    //     const previous = index === posts.length - 1 ? null : posts[index + 1]
-    //     const next = index === 0 ? null : posts[index - 1]
-
-    //     createPage({
-    //       path: slug,
-    //       component: blogPost,
-    //       context: {
-    //         id,
-    //         slug,
-    //         previous,
-    //         next,
-    //       },
-    //     })
-    //   })
-    // )
-
     await Promise.all(
       characters.map(async node => {
         createPage({
@@ -131,7 +167,29 @@ exports.createPages = async ({ graphql, actions }) => {
             species: node.species,
             gender: node.gender,
             status: node.status,
-						limit,
+            limit,
+          }, // This is to pass data as props to the component.
+        })
+      })
+    )
+    const firstId = products[0].id
+
+    await Promise.all(
+      products.map(async (node, index) => {
+        const nextId = products[index + 1] ? products[index + 1].id : firstId;
+        createPage({
+          path: `products/${node.id}`,
+          component: ProductSingle,
+          context: {
+            id: node.id,
+            nextId,
+            jankyCompany: node.janky_company,
+            jankyJob: node.janky_job,
+            jankyWallet: node.janky_wallet,
+            overPriced: node.over_priced,
+            currency: node.currency,
+            material: node.material,
+            product: node.product,
           }, // This is to pass data as props to the component.
         })
       })
