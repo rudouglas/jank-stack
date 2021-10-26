@@ -1,5 +1,4 @@
 const path = require(`path`)
-
 const JANKY_SOURCE_NODES = process.env.JANKY_SOURCE_NODES
 const JANKY_CREATE_PAGE = process.env.JANKY_CREATE_PAGE
 const JANKY_ERRORS = process.env.JANKY_ERRORS
@@ -86,8 +85,6 @@ exports.createPages = async ({ graphql, actions }) => {
 			if (node.name.length >= 10) {
 				JANKY_ERRORS === 'true' && console.error(`Error: this page is not as janky as it could be, please unfix`)
 			}
-
-	
 
       createPage({
         path: `characters/${node.id}`,
