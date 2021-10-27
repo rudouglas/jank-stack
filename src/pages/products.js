@@ -11,7 +11,7 @@ import { Button, Box, Flex, SimpleGrid, Container } from '@chakra-ui/react'
 
 const Products = ({ data }) => {
   const products = useRandomCharacters(
-    data.allContentfulProduct.nodes,
+    data.allProducts.nodes,
     40
   )
   return (
@@ -51,7 +51,7 @@ export default Products
 
 export const query = graphql`
 query yourProductQuery($limit: Int) {
-  allContentfulProduct(limit: $limit) {
+  allProducts(limit: $limit) {
     nodes {
       id
       janky_company

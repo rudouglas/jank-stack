@@ -16,9 +16,13 @@ import {UnlockIcon} from "@chakra-ui/icons";
 import React from "react"
 import Banner from "../components/Banner"
 import { Navbar } from "../components/Navbar/App"
+import { graphql } from 'gatsby'
+
+const JANKY_SITE = process.env.JANKY_SITE === 'true' ? true : false
+
 const ProductSingle = props => {
   const product = props.pageContext
-  console.log(product)
+  JANKY_SITE && console.log(product)
   return (
     <>
       <Banner />
@@ -240,3 +244,23 @@ const ProductSingle = props => {
 }
 
 export default ProductSingle
+
+export const query = graphql`
+query($jankySite: Boolean!) {
+  allProducts {
+    nodes {
+      id
+      janky_company
+      janky_job
+      janky_wallet
+      over_priced
+      currency
+      material
+      product
+      janky_color @include(if: $jankySite)
+      janky_bool @include(if: $jankySite)
+      janky_datetime @include(if: $jankySite)
+      janky_freq @include(if: $jankySite)
+    }
+  }
+}`
