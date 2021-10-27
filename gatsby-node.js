@@ -1,7 +1,7 @@
 const path = require(`path`)
 
 const JANKY_SITE = process.env.JANKY_SITE === 'true' ? true : false
-const SCALE_CHARACTERS = parseInt(process.env.SCALE_CHARACTERS)
+const SCALE_PRODUCTS = parseInt(process.env.SCALE_PRODUCTS)
 const limit = JANKY_SITE ? 10000 : 40
 const productMockDataFull = require("./static/MOCK_DATA.json")
 const productMockData = productMockDataFull.slice(0, process.env.PRODUCT_COUNT);
@@ -11,7 +11,7 @@ exports.sourceNodes = async ({ actions, createContentDigest }) => {
   const { createNode } = actions
 
   const productData = Array.from(
-    { length: SCALE_CHARACTERS },
+    { length: SCALE_PRODUCTS },
     () => productMockData
   ).flat()
   
